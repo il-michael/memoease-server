@@ -1,3 +1,4 @@
+# Base image setup
 FROM ubuntu:22.04
 LABEL maintainer="b.gamard@sismics.com"
 
@@ -9,6 +10,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 ENV JAVA_OPTIONS -Dfile.encoding=UTF-8 -Xmx1g
 ENV JETTY_VERSION 11.0.20
 ENV JETTY_HOME /opt/jetty
+ENV JETTY_BASE /opt/jetty-base
 
 # Install necessary packages
 RUN apt-get update && \
@@ -28,14 +30,17 @@ RUN wget -nv -O /tmp/jetty.tar.gz \
     && chown -R jetty:jetty /opt/jetty \
     && chmod +x /opt/jetty/bin/jetty.sh
 
-EXPOSE 8080
+# Create a separate Jetty base directory
+RUN mkdir -p /opt/jetty-base && chown -R jetty:jetty /opt/jetty-base
 
-# Copy the entire project directory into the Jetty webapps directory
-COPY ./docs-web/src/main/webapp/. /opt/jetty/webapps/docs/
-RUN chown -R jetty:jetty /opt/jetty/webapps/docs/
+# Copy the application files into the Jetty base directory
+COPY ./docs-web/src/main/webapp/. /opt/jetty-base/webapps/root/
 
 # Set working directory
 WORKDIR /opt/jetty
 
-# Start Jetty
-CMD ["java", "-jar", "/opt/jetty/start.jar"]
+# Expose port
+EXPOSE 8080
+
+# Start Jetty with the proper base and home directories
+CMD ["java", "-jar", "/opt/jetty/start.jar", "--add-to-startd=server,http,deploy"]
