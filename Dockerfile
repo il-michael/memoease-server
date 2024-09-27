@@ -30,17 +30,20 @@ RUN wget -nv -O /tmp/jetty.tar.gz \
     && chown -R jetty:jetty /opt/jetty \
     && chmod +x /opt/jetty/bin/jetty.sh
 
-# Create a separate Jetty base directory
-RUN mkdir -p /opt/jetty-base && chown -R jetty:jetty /opt/jetty-base
+# Create a separate Jetty base directory and configure it
+RUN mkdir -p /opt/jetty-base && \
+    chown -R jetty:jetty /opt/jetty-base && \
+    cd /opt/jetty-base && \
+    java -jar $JETTY_HOME/start.jar --create-startd --add-to-start=server,http,deploy
 
 # Copy the application files into the Jetty base directory
 COPY ./docs-web/src/main/webapp/. /opt/jetty-base/webapps/root/
 
 # Set working directory
-WORKDIR /opt/jetty
+WORKDIR /opt/jetty-base
 
 # Expose port
 EXPOSE 8080
 
-# Start Jetty with the proper base and home directories
-CMD ["java", "-jar", "/opt/jetty/start.jar", "--add-module=server,http,deploy"]
+# Start Jetty with the correct base directory
+CMD ["java", "-jar", "/opt/jetty/start.jar"]
