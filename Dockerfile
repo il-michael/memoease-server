@@ -43,4 +43,4 @@ WORKDIR /opt/jetty
 EXPOSE 8080
 
 # Start Jetty with the proper base and home directories
-CMD ["java", "-jar", "/opt/jetty/start.jar", "--add-to-startd=server,http,deploy"]
+CMD ["java", "-jar", "/opt/jetty/start.jar", "--add-module=server,http,deploy"]
